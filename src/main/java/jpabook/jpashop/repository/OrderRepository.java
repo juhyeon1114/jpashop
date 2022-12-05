@@ -6,12 +6,8 @@ import jpabook.jpashop.domain.Order;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
-
-import javax.swing.text.html.Option;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Repository
@@ -77,5 +73,31 @@ public class OrderRepository {
                         " join fetch o.delivery d",
                         Order.class
                 ).getResultList();
+    }
+
+    public List<Order> findAllWithItem() {
+        /**
+         * [distinct]
+         * - DB에서는 (모든 컬럼의 값이 완전히)중복된 데이터를 제거하고 싶을 때 사용한다.
+         * - JPA에서는 추가적으로 distinct 키워드가 붙어있는 객체를 기준으로 중복 제거를 한다.
+         * -> 어쨌든 DB 쿼리만으로는 중복을 제거할 수 없으므로 페이징이 불가능하다.
+         */
+        return em.createQuery(
+                        "select distinct o from Order o" +
+                                " join fetch o.member m" +
+                                " join fetch o.delivery d" +
+                                " join fetch o.orderItems oi" +
+                                " join fetch oi.item i", Order.class)
+                .getResultList();
+    }
+
+    public List<Order> findAllWithMemberDelivery(int offset, int limit) {
+        return em.createQuery(
+                        "select o from Order o" +
+                                " join fetch o.member m" +
+                                " join fetch o.delivery d", Order.class)
+                .setFirstResult(offset)
+                .setMaxResults(limit)
+                .getResultList();
     }
 }
